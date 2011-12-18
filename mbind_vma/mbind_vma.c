@@ -12,6 +12,7 @@ struct bitmask *nmask;
 char buf[1024];
 FILE *file;
 char retbuf[10240] = "";
+int mapped_fd;
 
 char *rubysrc = "ruby -e '\
   pid = %d; \
@@ -32,20 +33,31 @@ char *rubysrc = "ruby -e '\
 void init(void)
 {
 	void* addr;
+	char buf[128];
 
 	nmask = numa_allocate_nodemask();
 	numa_bitmask_setbit(nmask, 0);
 
 	pagesize = getpagesize();
 
+	sprintf(buf, "%s", "mbind_vma_XXXXXX");
+	mapped_fd = mkstemp(buf);
+	if (mapped_fd == -1)
+		perror("mkstemp "), exit(1);
+	unlink(buf);
+
+	if (lseek(mapped_fd, pagesize*8, SEEK_SET) < 0)
+		perror("lseek "), exit(1);
+	if (write(mapped_fd, "\0", 1) < 0)
+		perror("write "), exit(1);
+
 	addr = mmap(NULL, pagesize*8, PROT_NONE,
-		    MAP_ANON|MAP_PRIVATE, 0, 0);
+		    MAP_SHARED, mapped_fd, 0);
 	if (addr == MAP_FAILED)
 		perror("mmap "), exit(1);
 
-	if (mmap(addr+pagesize, pagesize*6, PROT_READ|PROT_WRITE,
-		 MAP_ANON|MAP_PRIVATE|MAP_FIXED, 0, 0) == MAP_FAILED)
-		perror("mmap "), exit(1);
+	if (mprotect(addr+pagesize, pagesize*6, PROT_READ|PROT_WRITE) < 0)
+		perror("mprotect "), exit(1);
 
 	mmap_addr = addr + pagesize;
 
@@ -217,6 +229,25 @@ void case8(void)
 	fin();
 }
 
+void case_n(void)
+{
+	init();
+	sprintf(buf, rubysrc, getpid(), mmap_addr, mmap_addr+pagesize*6);
+
+	/* make redundunt mappings [0][1234][34][7] */
+	mmap(mmap_addr + pagesize*4, pagesize*2, PROT_READ|PROT_WRITE,
+	     MAP_FIXED|MAP_SHARED, mapped_fd, pagesize*3);
+
+	/* Expect to do nothing. */
+	mem_unbind(2, 2);
+
+	file = popen(buf, "r");
+	fread(retbuf, sizeof(retbuf), 1, file);
+	Assert("4,2", retbuf, "case_n", __LINE__);
+
+	fin();
+}
+
 int main(int argc, char** argv)
 {
 	case4();
@@ -224,6 +255,7 @@ int main(int argc, char** argv)
 	case6();
 	case7();
 	case8();
+	case_n();
 
 	return 0;
 }
