@@ -1,0 +1,40 @@
+t0 = after = clock_gettime(PROCESS_CPU_TIME)
+sleeptimeabs = t0 + 100msec
+
+clock_nanosleep(PROCESS_CPU_TIME, TIMER_ABSTIME)
+
+t1 = afterabs = clock_gettime(PROCESS_CPU_TIME)
+sleepdiff = (unsigned long long) (t1 - sleeptimeabs)
+
+if (sleepdiff > sleeptime.tv_nsec)
+   sleepdiff is less than sleeptime.tv_nsec
+
+t = diffabs = t1 - t0
+if (t < sleeptime.tv_nsec || t > tv_nsec *2)
+   error t (99,937,000)
+
+
+clock_nanosleep
+	start: 
+	       thread_group_cputime
+		 cputimer->cputime = 
+			sig->sum_sched_runtime +
+			p->se.sum_exec_runtime +
+			rq->clock_task - rq->se.exec_start
+
+	end:
+		 thread_group_cputimer
+			cputimer->cputime
+
+	update:
+		jiffies
+		  update_curr
+		    delta_exec = clock_task - curr->exec_start
+		    __update_curr
+		      curr->sum_exec_runtime += delta_exec;
+		    account_group_exec_runtime()
+		      cputimer->cputime.sum_exec_runtime += delta_exec
+                    rq->se.exec_start = clock_task
+
+ 	          update_rq_clock
+		    sched_clock_cpu() - rq->clock
