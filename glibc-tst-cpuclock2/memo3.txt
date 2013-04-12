@@ -1,0 +1,37 @@
+core_dump
+	..
+		fill_prstatus
+			thread_group_cputime
+
+thread_group_cputimer
+	thread_group_cputime
+
+clock_gettime
+	posix_cpu_clock_get
+		cpu_clock_sample_group
+			thread_group_cputime
+
+
+/proc and sys_times etc
+      thread_group_cputime_adjusted
+		thread_group_cputime
+
+
+commit d670ec13178d0fd8680e6742a2bc6e04f28f87d8
+Author: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Date:   Thu Sep 1 12:42:04 2011 +0200
+
+    posix-cpu-timers: Cure SMP wobbles
+    
+
+    Reported-by: David Miller <davem@davemloft.net>
+    Signed-off-by: Peter Zijlstra <a.p.zijlstra@chello.nl>
+    Cc: stable@kernel.org
+    Link: http://lkml.kernel.org/r/1314874459.7945.22.camel@twins
+    Tested-by: David Miller <davem@davemloft.net>
+    Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+
+
+This does not take time since the last schedule operation (tick
+    or otherwise) into account.
+
