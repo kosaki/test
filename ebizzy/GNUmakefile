@@ -4,7 +4,7 @@ SRC = $(TARGET).c
 CC = gcc
 CFLAGS = -g -Wall -Wshadow 
 LDFLAGS = -nostdlib -nostartfiles -static -L $(HOME)/local/glibc/lib
-GLIBCDIR = /home/mkosaki/local/glibc/lib
+GLIBCDIR = $(HOME)/local/glibc/lib
 STARTFILES = $(GLIBCDIR)/crt1.o $(GLIBCDIR)/crti.o `gcc --print-file-name=crtbegin.o`
 ENDFILES = `gcc --print-file-name=crtend.o` $(GLIBCDIR)/crtn.o
 LIBGROUP = -Wl,--start-group $(GLIBCDIR)/libpthread.a $(GLIBCDIR)/libc.a -lgcc -lgcc_eh -Wl,--end-group
