@@ -74,7 +74,7 @@ static unsigned long long int
 test_nanosleep (clockid_t clock, const char *which,
 		const struct timespec *before, int *bad)
 {
-  const struct timespec sleeptime = { .tv_nsec = 100000000 };
+  const struct timespec sleeptime = { .tv_nsec = 100*1000*1000 };
   int e = clock_nanosleep (clock, 0, &sleeptime, NULL);
   if (e == EINVAL || e == ENOTSUP || e == ENOSYS)
     {
@@ -101,8 +101,8 @@ test_nanosleep (clockid_t clock, const char *which,
   unsigned long long int diff = tsdiff (before, &after);
   if (diff < sleeptime.tv_nsec || diff > sleeptime.tv_nsec * 2)
     {
-      printf ("clock_nanosleep on %s slept %llu (outside reasonable range)\n",
-	      which, diff);
+      printf ("clock_nanosleep on %s slept %llu %lu (outside reasonable range)\n",
+	      which, diff, sleeptime.tv_nsec);
       *bad = 1;
       return diff;
     }
