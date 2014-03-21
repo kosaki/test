@@ -66,7 +66,9 @@ int main(void)
 
 	printf("pid=%d\n", getpid());
 	pagesize = getpagesize();
+#if 0
 	make_long_vma_list();
+#endif
 
 	for (i=0; i < 32; i++) {
 		pthread_create(&thr, NULL, thr_func, NULL);

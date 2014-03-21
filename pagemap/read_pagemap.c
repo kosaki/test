@@ -88,6 +88,12 @@ static unsigned long do_u64_read(int fd, char *name,
 		perror(name);
 		exit(EXIT_FAILURE);
 	}
+#if 1 /* RHEL6 hack */
+	if (bytes == 0) {
+		bytes = count * 8;
+	}
+#endif
+
 	if (bytes % 8)
 		fatal("partial read: %lu bytes\n", bytes);
 
@@ -131,6 +137,7 @@ int main(int argc, char* argv[])
 {
 	int c;
 	unsigned long index;
+	unsigned long end_index;
 	unsigned long count;
 
 	page_size = getpagesize();
@@ -159,8 +166,9 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	index = start_addr / 8;
-	count = (end_addr - start_addr) / 8;
+	index = start_addr / page_size;
+	end_index = end_addr / page_size;
+	count = end_index - index;
 	walk_pagemap_range(index, count);
 
 	return 0;
